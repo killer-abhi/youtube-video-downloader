@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.log
+downloads/
+.env
+.DS_Store
+.vscode/
+.idea/
+*.swp

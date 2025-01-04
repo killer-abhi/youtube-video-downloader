@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>YouTube Video Downloader - 4K, HD, MP4</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+
+		<style>
+			.progress-container {
+				position: relative;
+				width: 150px;
+				height: 150px;
+				margin: 0 auto;
+			}
+
+			svg {
+				transform: rotate(-90deg); /* Rotate for top-down progression */
+			}
+
+			circle {
+				transition: stroke-dashoffset 1s linear;
+			}
+
+			#countdown-text {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				text-align: center;
+				font-size: 1.25rem;
+				font-weight: bold;
+				color: #2563eb;
+			}
+		</style>
+		<script>
+			async function fetchAvailableQualities() {
+				const url = document.getElementById("youtube_url").value;
+				if (!url) {
+					alert("Please enter a valid YouTube URL.");
+					return;
+				}
+
+				document.getElementById("quality-section").style.display = "none";
+				document.getElementById("download-button").style.display = "none";
+				document.getElementById("video-info").style.display = "none";
+				document.getElementById("show-quality").innerText = "Loading...";
+
+				try {
+					const response = await fetch(
+						`/get_video_info?url=${encodeURIComponent(url)}`
+					);
+					const data = await response.json();
+
+					if (data.error) {
+						alert(data.error);
+						return;
+					}
+
+					document.getElementById("video-title").innerText = data.title;
+					document.getElementById("video-thumbnail").src = data.thumbnail;
+					document.getElementById("video-info").style.display = "block";
+					document.getElementById("show-quality").style.display = "none";
+
+					const qualities = data.qualities;
+					const qualitySelect = document.getElementById("quality");
+					qualitySelect.innerHTML = '<option value="">Select Quality</option>';
+
+					qualities.forEach((quality) => {
+						const option = document.createElement("option");
+						option.value = quality.quality;
+						option.innerText = `${quality.quality} - ${
+							quality.size ? quality.size + " MB" : "Size Unknown"
+						}`;
+						if (quality.quality === "480p") {
+							option.selected = true;
+							defaultQualitySelected = true;
+						}
+						qualitySelect.appendChild(option);
+					});
+
+					document.getElementById("quality-section").style.display = "block";
+					document.getElementById("download-button").style.display = "block";
+				} catch (error) {
+					alert(
+						"Failed to fetch video information. Please check the URL or try again later."
+					);
+					console.error("Error fetching video information:", error);
+				} finally {
+					document.getElementById("show-quality").innerText = "Show Quality";
+				}
+			}
+
+			function showLoading() {
+				document.getElementById("download-button").style.display = "none";
+				document.getElementById("progress-bar").style.display = "block";
+				startCircularProgressBar();
+			}
+
+			function startCircularProgressBar() {
+				const totalTime = 30; // in seconds
+				let remainingTime = totalTime;
+
+				const progressCircle = document.getElementById("progress-circle");
+				const circleRadius = progressCircle.r.baseVal.value;
+				const circumference = 2 * Math.PI * circleRadius;
+				progressCircle.style.strokeDasharray = circumference;
+				progressCircle.style.strokeDashoffset = circumference;
+
+				const countdownText = document.getElementById("countdown-text");
+
+				const interval = setInterval(() => {
+					remainingTime -= 1;
+					const offset = circumference - (remainingTime / totalTime) * circumference;
+					progressCircle.style.strokeDashoffset = offset;
+					countdownText.innerText = `${remainingTime}s`;
+
+					if (remainingTime <= 0) {
+						clearInterval(interval);
+						countdownText.innerText = "Download Complete!";
+					}
+				}, 1000);
+			}
+		</script>
+	</head>
+	<body class="bg-gray-100 flex flex-col min-h-screen">
+		<!-- Navbar -->
+		<header class="bg-blue-600 text-white">
+			<div class="container mx-auto flex justify-between items-center py-4 px-6">
+				<h1 class="text-lg font-bold">YouTube Downloader</h1>
+				<nav>
+					<ul class="flex space-x-4">
+						<li><a href="#" class="hover:underline">Home</a></li>
+						<li><a href="#" class="hover:underline">About</a></li>
+						<li><a href="#" class="hover:underline">Contact</a></li>
+					</ul>
+				</nav>
+				<!-- <nav>
+					<ul class="flex space-x-4">
+						<li>
+							<a href="#" class="hover:underline"
+								>YouTube 4K Downloader</a
+							>
+						</li>
+					</ul>
+				</nav> -->
+			</div>
+		</header>
+
+		<main class="flex-grow container mx-auto px-6 py-10">
+			<div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-auto">
+				<h2 class="text-2xl font-bold text-center mb-6">Download Youtube Video</h2>
+				<form
+					action="/download"
+					method="post"
+					class="space-y-4"
+					onsubmit="showLoading()"
+				>
+					<div>
+						<label for="youtube_url" class="block text-gray-700 font-medium mb-2"
+							>Video URL:</label
+						>
+						<input
+							type="url"
+							id="youtube_url"
+							name="youtube_url"
+							required
+							class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+							placeholder="Enter YouTube or Instagram URL"
+						/>
+					</div>
+					<button
+						id="show-quality"
+						type="button"
+						onclick="fetchAvailableQualities()"
+						class="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition"
+					>
+						Show Quality
+					</button>
+					<div id="video-info" style="display: none" class="text-center my-4">
+						<img
+							id="video-thumbnail"
+							src=""
+							alt="YouTube video thumbnail"
+							class="mx-auto rounded-lg mb-2"
+						/>
+						<p id="video-title" class="text-lg font-medium text-gray-700"></p>
+					</div>
+					<div id="quality-section" style="display: none">
+						<label for="quality" class="block text-gray-700 font-medium mb-2"
+							>Select Video Quality:</label
+						>
+						<select
+							id="quality"
+							name="quality"
+							required
+							class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+						>
+							<option value="">Select Quality</option>
+						</select>
+					</div>
+					<button
+						type="submit"
+						id="download-button"
+						style="display: none"
+						class="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition"
+					>
+						Download
+					</button>
+					<div id="progress-bar" style="display: none" class="progress-container">
+						<svg width="150" height="150">
+							<circle
+								cx="75"
+								cy="75"
+								r="70"
+								stroke="#d1d5db"
+								stroke-width="12"
+								fill="none"
+							></circle>
+							<circle
+								id="progress-circle"
+								cx="75"
+								cy="75"
+								r="70"
+								stroke="#2563eb"
+								stroke-width="12"
+								fill="none"
+							></circle>
+						</svg>
+						<div id="countdown-text">30s</div>
+					</div>
+				</form>
+			</div>
+		</main>
+
+		<footer class="bg-gray-800 text-white">
+			<div class="container mx-auto py-6 px-6">
+				<div class="flex flex-wrap justify-between">
+					<div>
+						<h3 class="font-bold">YouTube Video Downloader</h3>
+						<p class="text-sm">Fast and secure YouTube video downloads.</p>
+					</div>
+					<div>
+						<h3 class="font-bold">Quick Links</h3>
+						<ul class="text-sm">
+							<li><a href="#" class="hover:underline">Privacy Policy</a></li>
+							<li><a href="#" class="hover:underline">Terms of Service</a></li>
+						</ul>
+					</div>
+				</div>
+				<div class="text-center mt-6 text-sm text-gray-400">
+					&copy; 2024 YouTube Downloader. All rights reserved.
+				</div>
+			</div>
+		</footer>
+	</body>
+</html>

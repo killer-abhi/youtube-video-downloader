@@ -1,0 +1,88 @@
+# Ignore OS-generated files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore node_modules
+node_modules/
+
+# Ignore build outputs
+dist/
+build/
+out/
+
+# Ignore environment variables
+.env
+.env.local
+.env.*.local
+
+# Ignore dependency directories
+bower_components/
+vendor/
+
+# Ignore IDE/editor configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Ignore coverage reports
+coverage/
+*.lcov
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.swp
+*.bak
+*.orig
+*.lock
+
+# Ignore specific frameworks/tools
+# For React/Next.js
+.next/
+.nuxt/
+
+# For Python
+*.pyc
+__pycache__/
+
+# For Flutter/Dart
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.dart_tool/
+pubspec.lock
+
+# For Java
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+target/
+
+# For C++/C
+*.obj
+*.o
+*.exe
+
+# For databases
+*.sqlite
+*.db
+
+# Ignore archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+downloads/
+static/

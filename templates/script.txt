@@ -1,0 +1,136 @@
+<script>
+      async function fetchAvailableQualities() {
+        const url = document.getElementById("youtube_url").value;
+        if (!url) {
+          alert("Please enter a valid YouTube URL.");
+          return;
+        }
+
+        // Hide previous sections and show loading state
+        document.getElementById("quality-section").style.display = "none";
+        document.getElementById("download-button").style.display = "none";
+        document.getElementById("video-info").style.display = "none";
+        document.getElementById("show-quality").innerText = "Loading...";
+
+        try {
+          const response = await fetch(`/get_video_info?url=${encodeURIComponent(url)}`);
+          const data = await response.json();
+
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+
+          // Display video title and thumbnail
+          document.getElementById("video-title").innerText = data.title;
+          document.getElementById("video-thumbnail").src = data.thumbnail;
+          document.getElementById("video-info").style.display = "block";
+          document.getElementById("show-quality").style.display = "none";
+
+          // Populate quality options
+          const qualities = data.qualities;
+          const qualitySelect = document.getElementById("quality");
+          qualitySelect.innerHTML = '<option value="">Select Quality</option>';
+
+          let defaultQualitySelected = false;
+          qualities.forEach((quality) => {
+            const option = document.createElement("option");
+            option.value = quality.quality;
+
+            const qualityLabel = quality.quality;
+            const sizeText = quality.size ? `${quality.size} MB` : "Size Unknown";
+
+            option.innerText = `${qualityLabel} - ${sizeText}`;
+
+            if (quality.quality === "480p") {
+              option.selected = true;
+              defaultQualitySelected = true;
+            }
+
+            qualitySelect.appendChild(option);
+          });
+
+          if (!defaultQualitySelected && qualities.length > 0) {
+            qualitySelect.children[1].selected = true;
+          }
+
+          document.getElementById("quality-section").style.display = "block";
+          document.getElementById("download-button").style.display = "block";
+        } catch (error) {
+          alert("Failed to fetch video information. Please check the URL or try again later.");
+          console.error("Error fetching video information:", error);
+        } finally {
+          document.getElementById("show-quality").innerText = "Show Quality";
+        }
+      }
+
+      function showLoading() {
+        document.getElementById("download-button").style.display = "none";
+        document.getElementById("loading-message").style.display = "block";
+        
+        // Start the circular progress bar
+        startCircularProgressBar();
+      }
+
+      function startCircularProgressBar() {
+        document.getElementById("download-button").style.display = "none";
+        const totalTime = 30; // Total time for the progress (in seconds)
+        let remainingTime = totalTime;
+        document.getElementById("progress-bar").style.display="block";
+        const progressCircle = document.getElementById("progress-circle");
+        const circleRadius = progressCircle.r.baseVal.value;
+        const circumference = 2 * Math.PI * circleRadius;
+        progressCircle.style.strokeDasharray = circumference;
+        progressCircle.style.strokeDashoffset = circumference;
+
+        const countdownText = document.getElementById("countdown-text");
+
+        // Set an interval to update the progress bar
+        const interval = setInterval(() => {
+          remainingTime -= 1;
+          const offset = circumference - (remainingTime / totalTime) * circumference;
+          progressCircle.style.strokeDashoffset = offset;
+          countdownText.innerText = `${remainingTime}s`;
+
+          if (remainingTime <= 0) {
+            clearInterval(interval); // Stop when the time reaches 0
+            countdownText.innerText = "Download Complete!";
+          }
+        }, 1000); // Update every 1 second
+      }
+    </script>
+
+    <footer class="bg-gray-800 text-white">
+    <div class="container mx-auto py-6 px-6">
+      <div class="flex flex-wrap justify-between">
+        <div>
+          <h3 class="font-bold">YouTube Downloader</h3>
+          <p class="text-sm">Fast and secure YouTube video downloads.</p>
+        </div>
+        <div>
+          <h3 class="font-bold">Quick Links</h3>
+          <ul class="text-sm">
+            <li><a href="#" class="hover:underline">Privacy Policy</a></li>
+            <li><a href="#" class="hover:underline">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="text-center mt-6 text-sm text-gray-400">
+        &copy; 2024 YouTube Downloader. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+<!-- Navbar -->
+  <header class="bg-blue-600 text-white">
+    <div class="container mx-auto flex justify-between items-center py-4 px-6">
+      <h1 class="text-lg font-bold">YouTube Downloader</h1>
+      <nav>
+        <ul class="flex space-x-4">
+          <li><a href="#" class="hover:underline">Home</a></li>
+          <li><a href="#" class="hover:underline">About</a></li>
+          <li><a href="#" class="hover:underline">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
